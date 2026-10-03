@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, jsonify, redirect
+from whitenoise import WhiteNoise
 # from db.check import check_credentials
 
 app = Flask(__name__)
+app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/")
 
 default = {
     "username": "admin",
