@@ -1,1 +1,122 @@
+h1 {
+    color: #044ED7;
+    font-size: 50px;
+}
 
+.title {
+    text-align: center;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    margin-top: -90px;
+    padding: 0;
+    display: flex;
+    border: 1px solid #000000;
+    background-color: #044ED7;
+  }
+  
+li a {
+    display: block;
+    color: rgb(255, 255, 255);
+    padding: 15px 16px;
+    text-decoration: none;
+}
+li a:hover {
+    background-color: #555555;
+    color: white;
+}
+
+ul li a.active {
+    background-color: #023592;
+  }
+
+.logout {
+    margin-left: auto;
+}
+
+.homepage {
+    border: 2px solid #000000;
+    border-radius: 10px;
+    padding: 30px;
+    width: 400px;
+    background-color: #f0f4ff;
+    box-sizing: border-box;
+    margin: 50px auto;
+}
+
+.homepage input[type="text"],
+.homepage input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 15px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.homepage input[type="text"]:focus,
+.homepage input[type="password"]:focus {
+    border-color: #044ED7;
+    box-shadow: 0 0 5px rgba(4, 78, 215, 0.5);
+}
+
+.homepage input[type="submit"] {
+    width: 100%;
+    padding: 12px 20px;
+    margin-top: 10px;
+
+    background: linear-gradient(135deg, #044ED7, #023592);
+    color: white;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow: 0 4px 10px rgba(4, 78, 215, 0.3);
+
+    transition: all 0.2s ease;
+}
+
+.homepage input[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(4, 78, 215, 0.4);
+}
+
+.homepage input[type="submit"]:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 7px rgba(4, 78, 215, 0.3);
+}
+
+.create-btn {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    margin-top: 10px;
+
+    text-align: center;
+    text-decoration: none;
+
+    background-color: transparent;
+    color: #044ED7;
+    border: 2px solid #044ED7;
+    border-radius: 8px;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    transition: all 0.2s ease;
+}
+
+.create-btn:hover {
+    background-color: #044ED7;
+    color: white;
+}
