@@ -28,10 +28,10 @@ def check_user(username, password):
         # Open a secure connection wrapper
         client = create_client_sync(url=DB_URI, auth_token=AUTH_TOKEN)
         
-        # Execute query and pull the rows
+        # FIX: libsql-client requires parameters passed inside a tuple/list matching SQL types
         result = client.execute(
             "SELECT * FROM users WHERE username = ? AND password = ?;", 
-            [username, password]
+            parameters=[username, password]  # <-- Added 'parameters=' keyword explicitly
         )
         client.close()
         
@@ -49,6 +49,7 @@ def check_user(username, password):
         user = cursor.fetchone()
         conn.close()
         return user is not None
+
 
 @app.route("/")
 def index():
