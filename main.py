@@ -25,18 +25,24 @@ app.wsgi_app = WhiteNoise(
 def check_user(username, password):
     # Production cloud database validation via libsql-client
     if AUTH_TOKEN:
-        # Open a secure connection wrapper
-        client = create_client_sync(url=DB_URI, auth_token=AUTH_TOKEN)
-        
-        # FIX: libsql-client requires parameters passed inside a tuple/list matching SQL types
-        result = client.execute(
-            "SELECT * FROM users WHERE username = ? AND password = ?;", 
-            parameters=[username, password]  # <-- Added 'parameters=' keyword explicitly
-        )
-        client.close()
-        
-        # If rows list isn't empty, the user exists
-        return len(result.rows) > 0
+        try:
+            # Open a secure connection wrapper
+            client = create_client_sync(url=DB_URI, auth_token=AUTH_TOKEN)
+            
+            # Official syntax: Pass query variables directly as a list argument
+            result = client.execute(
+                "SELECT * FROM users WHERE username = ? AND password = ?;", 
+                [username, password]
+            )
+            client.close()
+            
+            # If rows list isn't empty, the user exists
+            return len(result.rows) > 0
+            
+        except Exception as e:
+            # This logs the exact error to your Render dashboard instead of giving a generic 500
+            print(f"DATABASE ERROR ON RENDER: {e}")
+            return False
         
     # Local fallback for offline computer testing
     else:
