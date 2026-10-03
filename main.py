@@ -1,9 +1,16 @@
 from flask import Flask, render_template, request, jsonify, redirect
 from whitenoise import WhiteNoise
+import os
 # from db.check import check_credentials
 
 app = Flask(__name__)
-app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/")
+
+base_dir = os.path.dirname(os.path.abspath(__file__))
+app.wsgi_app = WhiteNoise(
+    app.wsgi_app, 
+    root=os.path.join(base_dir, 'static'), 
+    prefix='static/'
+)
 
 default = {
     "username": "admin",
