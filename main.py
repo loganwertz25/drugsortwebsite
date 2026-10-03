@@ -1,7 +1,20 @@
 from flask import Flask, render_template, request, jsonify, redirect
-from db.check import check_credentials
+# from db.check import check_credentials
 
 app = Flask(__name__)
+
+default = {
+    "username": "admin",
+    "password": "admin"
+}
+
+
+def check_user(username, passowrd):
+    
+    if username == default["username"] and passowrd == default["password"]:
+        return True
+    else:
+        return False
 
 @app.route("/")
 def index():
@@ -16,7 +29,7 @@ def submit_data():
     data_name = request.form['username']
     data_pwd = request.form['pwd']
     
-    result = check_credentials(data_name, data_pwd)
+    result = check_user(data_name, data_pwd)
 
     if result:
         return redirect("/user-home")
