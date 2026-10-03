@@ -6,8 +6,8 @@ import os
 if os.environ.get('RENDER'):
     from libsql_client import create_client_sync
     
-    DB_URI = os.environ.get('libsql://drugsorterdb-loganwertz25.aws-us-west-2.turso.io')
-    AUTH_TOKEN = os.environ.get('eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3OTEwNjk0MTAsImlkIjoiMDFhMTA0MGMtMDcwMS03OTA1LWJiYTktM2YyMzM5NDU1ZDBlIiwia2lkIjoiRXBBZ0pjdzZVSE95NmlNcGVxWnNCSWpQdm1oSmwyc2ZWVXFwbWZtc29PZyIsInJpZCI6ImIwNjdjNDFlLTk5OGEtNDQ1Mi1iNzRkLTYwZjhlODY5ZGVhMiJ9.9lk3kqAPohf18M0Gshg3udJ2xRp4FkdyfqqSk8hCuLUgJrgPBNT3csQ57o09tiQAOZzXHQs62j5pBETgndxNBA')
+    DB_URI = os.environ.get('TURSO_DATABASE_URL')
+    AUTH_TOKEN = os.environ.get('TURSO_AUTH_TOKEN')
 else:
     import sqlite3
     DB_URI = 'local_development.db'
