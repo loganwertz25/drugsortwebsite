@@ -1,13 +1,9 @@
-from flask import Flask, render_template, request, jsonify, redirect
+from flask import Flask, render_template, request, jsonify, redirect, session
 from whitenoise import WhiteNoise
 import os
+from dotenv import load_dotenv
 # from db.check import check_credentials
 
-import os
-from flask import Flask, render_template, request, jsonify, redirect
-from whitenoise import WhiteNoise
-
-# --- PURE PYTHON TURSO DRIVER FIX ---
 if os.environ.get('RENDER'):
     from libsql_client import create_client_sync
     
@@ -26,9 +22,10 @@ else:
     DB_URI = 'local_development.db'
     AUTH_TOKEN = None
 # -------------------------------------
-
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY")
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 app.wsgi_app = WhiteNoise(
@@ -70,6 +67,9 @@ def index():
 
 @app.route("/user-home")
 def home():
+    if not session.get('logged_in'):
+        return redirect("/")
+    
     return render_template("user_home.html")
 
 @app.route("/homepage", methods=["POST"])
@@ -80,9 +80,16 @@ def submit_data():
     result = check_user(data_name, data_pwd)
 
     if result:
+        session['logged_in'] = True
+        session['username'] = data_name 
         return redirect("/user-home")
     else:
         return "Error, user not found."
+    
+@app.route("/logout")
+def logout():
+    session.clear() # Deletes the login session data
+    return redirect("/")
     
     
 if __name__ == "__main__":
