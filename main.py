@@ -26,13 +26,12 @@ def check_user(username, password):
     # Production cloud database validation via libsql-client
     if AUTH_TOKEN:
         try:
-            # Open a secure connection wrapper
             client = create_client_sync(url=DB_URI, auth_token=AUTH_TOKEN)
             
-            # Official syntax: Pass query variables directly as a list argument
+            # FIX: Use named placeholders (:username and :password) and pass variables as a dict
             result = client.execute(
-                "SELECT * FROM users WHERE username = ? AND password = ?;", 
-                [username, password]
+                "SELECT * FROM users WHERE username = :username AND password = :password;", 
+                {"username": username, "password": password}
             )
             client.close()
             
@@ -40,7 +39,6 @@ def check_user(username, password):
             return len(result.rows) > 0
             
         except Exception as e:
-            # This logs the exact error to your Render dashboard instead of giving a generic 500
             print(f"DATABASE ERROR ON RENDER: {e}")
             return False
         
@@ -55,6 +53,7 @@ def check_user(username, password):
         user = cursor.fetchone()
         conn.close()
         return user is not None
+
 
 
 @app.route("/")
