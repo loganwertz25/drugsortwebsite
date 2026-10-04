@@ -7,16 +7,16 @@ from dotenv import load_dotenv
 if os.environ.get('RENDER'):
     from libsql_client import create_client_sync
     
-    # 1. Fetch your variables securely from Render's dashboard panel
+    # 1. Fetch clean environment strings directly from Render's config panel
     raw_url = os.environ.get('TURSO_DATABASE_URL', '')
     token = os.environ.get('TURSO_AUTH_TOKEN', '')
     
-    # 2. Convert whatever prefix it has (libsql:// or wss://) straight into a stable https:// URL
-    clean_url = raw_url.replace("libsql://", "https://").replace("wss://", "https://")
+    # 2. Ensure it targets the specific wss:// connection schema required by Hrana protocols
+    clean_url = raw_url.replace("libsql://", "wss://").replace("https://", "wss://")
     
-    # 3. Bake the authToken query parameter cleanly right into the path string itself
+    # 3. Bake the authToken cleanly right into the path string itself
     DB_URI = f"{clean_url}?authToken={token}"
-    AUTH_TOKEN = "ACTIVE"  # Acts as a simple internal boolean flag for our if-statement below
+    AUTH_TOKEN = "ACTIVE"
 else:
     import sqlite3
     DB_URI = 'local_development.db'
@@ -37,7 +37,7 @@ app.wsgi_app = WhiteNoise(
 def check_user(username, password):
     if AUTH_TOKEN == "ACTIVE":
         try:
-            # Notice we pass ONLY the url string parameter since the token is baked in
+            # Connect via the properly formatted Hrana WebSocket query string
             client = create_client_sync(url=DB_URI)
             
             result = client.execute(
@@ -49,6 +49,7 @@ def check_user(username, password):
             return len(result.rows) > 0
             
         except Exception as e:
+            # Captures exact handshake details right inside your Render dashboard logs panel
             print(f"DATABASE ERROR ON RENDER: {e}")
             return False
     else:
@@ -59,6 +60,7 @@ def check_user(username, password):
         user = cursor.fetchone()
         conn.close()
         return user is not None
+
 
 
 @app.route("/")
