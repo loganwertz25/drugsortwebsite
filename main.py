@@ -23,33 +23,42 @@ app.wsgi_app = WhiteNoise(
 )
 
 def check_user(username, password):
-    # Production cloud database validation via libsql-client
     if AUTH_TOKEN:
         try:
             client = create_client_sync(url=DB_URI, auth_token=AUTH_TOKEN)
             
-            # FIX: Use named placeholders (:username and :password) and pass variables as a dict
-            result = client.execute(
-                "SELECT * FROM users WHERE username = :username AND password = :password;", 
-                {"username": username, "password": password}
-            )
+            # Fetch ALL users from your table to see what exists in the cloud
+            result = client.execute("SELECT username, password FROM users;")
             client.close()
             
-            # If rows list isn't empty, the user exists
-            return len(result.rows) > 0
+            print(f"--- DATABASE DEBUG LOG ---")
+            print(f"Form inputs received -> User: '{username}' | Pass: '{password}'")
+            print(f"Total rows found in Turso cloud: {len(result.rows)}")
+            
+            # Manually loop over the rows to check for an exact match
+            for row in result.rows:
+                # libsql-client rows behave like lists: index 0 is username, index 1 is password
+                db_user = str(row[0]).strip()
+                db_pass = str(row[1]).strip()
+                
+                print(f"Checking against cloud record -> DB User: '{db_user}' | DB Pass: '{db_pass}'")
+                
+                if db_user == username.strip() and db_pass == password.strip():
+                    print("MATCH FOUND! Logging user in...")
+                    return True
+            
+            print("NO MATCH FOUND in the loop.")
+            return False
             
         except Exception as e:
             print(f"DATABASE ERROR ON RENDER: {e}")
             return False
         
-    # Local fallback for offline computer testing
     else:
+        # Local computer fallback
         conn = sqlite3.connect(DB_URI)
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM users WHERE username = ? AND password = ?;", 
-            (username, password)
-        )
+        cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?;", (username, password))
         user = cursor.fetchone()
         conn.close()
         return user is not None
