@@ -3,15 +3,30 @@ from whitenoise import WhiteNoise
 import os
 # from db.check import check_credentials
 
+import os
+from flask import Flask, render_template, request, jsonify, redirect
+from whitenoise import WhiteNoise
+
+# --- PURE PYTHON TURSO DRIVER FIX ---
 if os.environ.get('RENDER'):
     from libsql_client import create_client_sync
     
-    DB_URI = os.environ.get('TURSO_DATABASE_URL')
-    AUTH_TOKEN = os.environ.get('TURSO_AUTH_TOKEN')
+    # 1. Fetch your variables securely from Render's dashboard panel
+    raw_url = os.environ.get('TURSO_DATABASE_URL', '')
+    token = os.environ.get('TURSO_AUTH_TOKEN', '')
+    
+    # 2. Convert whatever prefix it has (libsql:// or wss://) straight into a stable https:// URL
+    clean_url = raw_url.replace("libsql://", "https://").replace("wss://", "https://")
+    
+    # 3. Bake the authToken query parameter cleanly right into the path string itself
+    DB_URI = f"{clean_url}?authToken={token}"
+    AUTH_TOKEN = "ACTIVE"  # Acts as a simple internal boolean flag for our if-statement below
 else:
     import sqlite3
     DB_URI = 'local_development.db'
     AUTH_TOKEN = None
+# -------------------------------------
+
 
 app = Flask(__name__)
 
@@ -23,37 +38,22 @@ app.wsgi_app = WhiteNoise(
 )
 
 def check_user(username, password):
-    if AUTH_TOKEN:
+    if AUTH_TOKEN == "ACTIVE":
         try:
-            client = create_client_sync(url=DB_URI, auth_token=AUTH_TOKEN)
+            # Notice we pass ONLY the url string parameter since the token is baked in
+            client = create_client_sync(url=DB_URI)
             
-            # Fetch ALL users from your table to see what exists in the cloud
-            result = client.execute("SELECT username, password FROM users;")
+            result = client.execute(
+                "SELECT * FROM users WHERE username = ? AND password = ?;", 
+                [username, password]
+            )
             client.close()
             
-            print(f"--- DATABASE DEBUG LOG ---")
-            print(f"Form inputs received -> User: '{username}' | Pass: '{password}'")
-            print(f"Total rows found in Turso cloud: {len(result.rows)}")
-            
-            # Manually loop over the rows to check for an exact match
-            for row in result.rows:
-                # libsql-client rows behave like lists: index 0 is username, index 1 is password
-                db_user = str(row[0]).strip()
-                db_pass = str(row[1]).strip()
-                
-                print(f"Checking against cloud record -> DB User: '{db_user}' | DB Pass: '{db_pass}'")
-                
-                if db_user == username.strip() and db_pass == password.strip():
-                    print("MATCH FOUND! Logging user in...")
-                    return True
-            
-            print("NO MATCH FOUND in the loop.")
-            return False
+            return len(result.rows) > 0
             
         except Exception as e:
             print(f"DATABASE ERROR ON RENDER: {e}")
             return False
-        
     else:
         # Local computer fallback
         conn = sqlite3.connect(DB_URI)
@@ -62,7 +62,6 @@ def check_user(username, password):
         user = cursor.fetchone()
         conn.close()
         return user is not None
-
 
 
 @app.route("/")
