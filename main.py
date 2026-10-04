@@ -7,16 +7,16 @@ from dotenv import load_dotenv
 if os.environ.get('RENDER'):
     from libsql_client import create_client_sync
     
-    # 1. Fetch clean environment strings directly from Render's config panel
+    # 1. Pull the raw URL directly from your Render configuration panel
     raw_url = os.environ.get('TURSO_DATABASE_URL', '')
     token = os.environ.get('TURSO_AUTH_TOKEN', '')
     
-    # 2. Ensure it targets the specific wss:// connection schema required by Hrana protocols
-    clean_url = raw_url.replace("libsql://", "wss://").replace("https://", "wss://")
+    # 2. CRUCIAL: Force the protocol to use standard https:// instead of libsql:// or wss://
+    clean_url = raw_url.replace("libsql://", "https://").replace("wss://", "https://")
     
-    # 3. Bake the authToken cleanly right into the path string itself
-    DB_URI = f"{clean_url}?authToken={token}"
-    AUTH_TOKEN = "ACTIVE"
+    # 3. Assign the variables cleanly to our global names
+    DB_URI = clean_url
+    AUTH_TOKEN = token
 else:
     import sqlite3
     DB_URI = 'local_development.db'
@@ -35,10 +35,11 @@ app.wsgi_app = WhiteNoise(
 )
 
 def check_user(username, password):
-    if AUTH_TOKEN == "ACTIVE":
+    # Production cloud database validation via libsql-client over HTTPS
+    if AUTH_TOKEN and AUTH_TOKEN != "ACTIVE":
         try:
-            # Connect via the properly formatted Hrana WebSocket query string
-            client = create_client_sync(url=DB_URI)
+            # Pass the URL and Token as separate keyword properties
+            client = create_client_sync(url=DB_URI, auth_token=AUTH_TOKEN)
             
             result = client.execute(
                 "SELECT * FROM users WHERE username = ? AND password = ?;", 
@@ -49,7 +50,6 @@ def check_user(username, password):
             return len(result.rows) > 0
             
         except Exception as e:
-            # Captures exact handshake details right inside your Render dashboard logs panel
             print(f"DATABASE ERROR ON RENDER: {e}")
             return False
     else:
@@ -60,8 +60,6 @@ def check_user(username, password):
         user = cursor.fetchone()
         conn.close()
         return user is not None
-
-
 
 @app.route("/")
 def index():
